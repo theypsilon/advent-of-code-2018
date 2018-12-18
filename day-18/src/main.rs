@@ -1,8 +1,8 @@
 fn main() {
     println!("\nPuzzle:");
     process(PUZZLE_INPUT);
-    println!("\nExample:");
-    process(EXAMPLE_INPUT);
+    //println!("\nExample:");
+    //process(EXAMPLE_INPUT);
 }
 
 fn process(input: &str) {
@@ -14,13 +14,20 @@ fn process(input: &str) {
     println!("char size: {} x {}\n", rows, columns);
     print_map(&map, "Initial state");
 
+
+
     let mut odd_map = empty_map(rows, columns);
-    for step in 0 .. 1000000000 {
-        if step % 2 == 0 {
+    for step in 1 ..= 1000 {
+        if step % 2 == 1 {
             evolve_map(&map, &mut odd_map);
         } else {
             evolve_map(&odd_map, &mut map);
         }
+        let wood = count_kinds(if step % 2 == 0 {&map} else {&odd_map}, '|');
+        let lumberyards = count_kinds(if step % 2 == 0 {&map} else {&odd_map}, '#');
+
+        let resources = wood * lumberyards;
+        println!("step: {}, resources: {}", step, resources);
     }
 
     print_map(&map, "After 1000000000 minutes");
