@@ -13,16 +13,46 @@ fn process(input: &str) {
     let columns = map[0].len();
     println!("char size: {} x {}\n", rows, columns);
     print_map(&map, "Initial state");
-    for step in 1 ..= 10 {
-        map = evolve_map(&map);
-        print_map(&map, format!("After {} minutes", step).as_ref());
+
+    let mut odd_map = empty_map(rows, columns);
+    let mut even_map = &mut map;
+    for step in 0 .. 10 {
+        if step % 2 == 0 {
+            evolve_map(&even_map, &mut odd_map);
+        } else {
+            evolve_map(&odd_map, &mut even_map);
+        }
     }
+
+    print_map(&map, "After 1000 minutes");
 
     let wood = count_kinds(&map, '|');
     let lumberyards = count_kinds(&map, '#');
 
     println!("wood: {}, lumberyards: {}", wood, lumberyards);
     println!("total resources: {}", wood * lumberyards);
+}
+
+fn evolve_map(map: &Vec<Vec<char>>, new_map: &mut Vec<Vec<char>>) {
+    let rows = map.len();
+    let columns = map[0].len();
+    for i in 0 .. rows {
+        for j in 0 .. columns {
+            new_map[i][j] = map[i][j];
+            match map[i][j] {
+                '.' => if search_adjacent(&map, i, j, '|') >= 3 {
+                    new_map[i][j] = '|';
+                },
+                '#' => if search_adjacent(&map, i, j, '#') < 1 || search_adjacent(&map, i, j, '|') < 1 {
+                    new_map[i][j] = '.';
+                },
+                '|' => if search_adjacent(&map, i, j, '#') >= 3 {
+                    new_map[i][j] = '#';
+                },
+                _ => unreachable!()
+            }
+        }
+    }
 }
 
 fn count_kinds(map: &Vec<Vec<char>>, kind: char) -> usize {
@@ -45,30 +75,6 @@ fn print_map(map: &Vec<Vec<char>>, text: &str) {
         .map(|vec| vec.iter().collect::<String>())
         .for_each(|string| println!("{}", string));
     println!("");
-}
-
-fn evolve_map(map: &Vec<Vec<char>>) -> Vec<Vec<char>> {
-    let rows = map.len();
-    let columns = map[0].len();
-    let mut new_map = empty_map(rows, columns);
-    for i in 0 .. rows {
-        for j in 0 .. columns {
-            new_map[i][j] = map[i][j];
-            match map[i][j] {
-                '.' => if search_adjacent(&map, i, j, '|') >= 3 {
-                    new_map[i][j] = '|';
-                },
-                '#' => if search_adjacent(&map, i, j, '#') < 1 || search_adjacent(&map, i, j, '|') < 1 {
-                    new_map[i][j] = '.';
-                },
-                '|' => if search_adjacent(&map, i, j, '#') >= 3 {
-                    new_map[i][j] = '#';
-                },
-                _ => unreachable!()
-            }
-        }
-    }
-    new_map
 }
 
 fn search_adjacent(map: &Vec<Vec<char>>, i: usize, j: usize, searched: char) -> usize {
