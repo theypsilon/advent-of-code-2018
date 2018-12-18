@@ -56,11 +56,13 @@ fn main() {
     // print the whole matrix
     print_matrix(&matrix, rows, columns, min_x, min_y);
 
-    let total_water = count_water(&matrix, minimum_y_value);
+    let total_water = count_all_water(&matrix, minimum_y_value);
+    let resting_water = count_resting_water(&matrix);
 
     println!("total steps: {}", result.steps);
     println!("water springs: {}", result.water_springs);
     println!("total water: {}", total_water);
+    println!("resting water: {}", resting_water);
 
     // Now, les cross validate with the example given in the exercise, example total water should be 57
     let mut example_lines: Vec<Line> = Vec::new();
@@ -78,11 +80,13 @@ fn main() {
     let mut example_matrix = generate_empty_matrix(13, 13);
     read_input_lines(&mut example_matrix, &example_lines, 494, 0);
     let example_result = simulate_water_falling(&mut example_matrix, 13);
-    let example_total_water = count_water(&example_matrix, 1);
+    let example_total_water = count_all_water(&example_matrix, 1);
+    let example_resting_water = count_resting_water(&example_matrix);
     print_matrix(&example_matrix, 13, 13, 494, 0);
     println!("example total steps: {}", example_result.steps);
     println!("example water springs: {}", example_result.water_springs);
     println!("example total water: {}", example_total_water);
+    println!("example resting water: {}", example_resting_water);
 }
 
 fn generate_empty_matrix(rows: usize, columns: usize) -> Vec<Vec<char>> {
@@ -144,7 +148,7 @@ fn read_input_lines(matrix: &mut Vec<Vec<char>>, lines: &Vec<Line>, min_x: usize
     matrix[0][(500 - min_x)] = '+';
 }
 
-fn count_water(matrix: &Vec<Vec<char>>, minimum_y_value: usize) -> usize {
+fn count_all_water(matrix: &Vec<Vec<char>>, minimum_y_value: usize) -> usize {
     let mut result = 0;
     for i in 0 .. matrix.len() {
         for j in 0 .. matrix[i].len() {
@@ -155,6 +159,20 @@ fn count_water(matrix: &Vec<Vec<char>>, minimum_y_value: usize) -> usize {
         }
     }
     result - minimum_y_value
+}
+
+
+fn count_resting_water(matrix: &Vec<Vec<char>>) -> usize {
+    let mut result = 0;
+    for i in 0 .. matrix.len() {
+        for j in 0 .. matrix[i].len() {
+            result += match matrix[i][j] {
+                '~' => 1,
+                _ => 0
+            }
+        }
+    }
+    result
 }
 
 struct Flow {
@@ -252,10 +270,26 @@ fn simulate_water_falling(matrix: &mut Vec<Vec<char>>, maximum_y_value: usize) -
                     if falling_left {
                         new_flows.push(Flow { y: i, x: j - fill_left});
                         matrix[i][j - fill_left] = '*';
+                        for k in j - fill_left + 1 ..= j {
+                            matrix[i][k] = '|';
+                        }
+                        let mut to_right = 1;
+                        while matrix[i][j + to_right] != '#' && matrix[i][j + to_right] != '|' && (matrix[i + 1][j + to_right] == '#' || matrix[i + 1][j + to_right] == '~') {
+                            matrix[i][j + to_right] = '|';
+                            to_right += 1;
+                        }
                     }
                     if falling_right {
                         new_flows.push(Flow { y: i, x: j + fill_right});
                         matrix[i][j + fill_right] = '*';
+                        for k in j ..= j + fill_right - 1 {
+                            matrix[i][k] = '|';
+                        }
+                        let mut to_left = 1;
+                        while matrix[i][j - to_left] != '#' && matrix[i][j - to_left] != '|' && (matrix[i + 1][j - to_left] == '#' || matrix[i + 1][j - to_left] == '~') {
+                            matrix[i][j - to_left] = '|';
+                            to_left += 1;
+                        }
                     }
                     if !falling_left && !falling_right {
                         if erased_flows.len() > 0 {
