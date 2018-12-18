@@ -15,16 +15,15 @@ fn process(input: &str) {
     print_map(&map, "Initial state");
 
     let mut odd_map = empty_map(rows, columns);
-    let mut even_map = &mut map;
-    for step in 0 .. 10 {
+    for step in 0 .. 1000000000 {
         if step % 2 == 0 {
-            evolve_map(&even_map, &mut odd_map);
+            evolve_map(&map, &mut odd_map);
         } else {
-            evolve_map(&odd_map, &mut even_map);
+            evolve_map(&odd_map, &mut map);
         }
     }
 
-    print_map(&map, "After 1000 minutes");
+    print_map(&map, "After 1000000000 minutes");
 
     let wood = count_kinds(&map, '|');
     let lumberyards = count_kinds(&map, '#');
